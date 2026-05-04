@@ -1172,7 +1172,7 @@ tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
   </div>
   <div class="toast-actions">
     <button class="btn-extend" onclick="extendSession()">Extend Session</button>
-    <button class="btn-ghost" onclick="closeModal('signout-modal');openModal('signout-modal')">Sign Out Now</button>
+    <button class="btn-ghost" onclick="extendSession();openModal('signout-modal')">Sign Out Now</button>
   </div>
 </div>
 
@@ -1692,9 +1692,12 @@ function showSessionToast() {
   timerEl.textContent = formatCountdown(secs);
   bar.style.width = '100%';
 
+  const textEl = document.getElementById('toast-timer-text');
   sessionCountdownInterval = setInterval(() => {
     secs--;
-    timerEl.textContent = formatCountdown(secs);
+    const fmt = formatCountdown(secs);
+    timerEl.textContent = fmt;
+    if (textEl) textEl.textContent = fmt;
     bar.style.width = ((secs / SESSION_COUNTDOWN) * 100) + '%';
     if (secs <= 0) {
       clearInterval(sessionCountdownInterval);
