@@ -15,7 +15,7 @@
   --s2: #111820;
   --s3: #161E28;
   --s4: #1A2333;
-  --primary: #00D4AA;
+  --primary: #00B896;
   --b1: #1E2D3D;
   --b2: #2A3F55;
   --t1: #E2EAF4;
@@ -25,9 +25,29 @@
   --red: #EF4444;
   --purple: #A855F7;
   --blue: #3B82F6;
-  --teal: #00D4AA;
+  --teal: #00B896;
 }
 
+:root[data-theme="light"] {
+  --bg: #F0F4F8;
+  --s1: #FFFFFF;
+  --s2: #F8FAFC;
+  --s3: #FFFFFF;
+  --s4: #EEF2F7;
+  --primary: #009B7E;
+  --b1: #D6E0EA;
+  --b2: #C0CEDB;
+  --t1: #0F1923;
+  --t2: #5A6E82;
+  --green: #16A34A;
+  --orange: #D97706;
+  --red: #DC2626;
+  --purple: #9333EA;
+  --blue: #2563EB;
+  --teal: #009B7E;
+}
+
+html { transition: background 0.2s, color 0.2s; }
 html, body { height: 100%; background: var(--bg); color: var(--t1); font-family: 'Inter', sans-serif; font-size: 14px; overflow: hidden; }
 
 /* ── AUTH SCREENS ── */
@@ -125,6 +145,12 @@ html, body { height: 100%; background: var(--bg); color: var(--t1); font-family:
   font-family: 'Inter', sans-serif; transition: color 0.15s, border-color 0.15s;
 }
 .logout-btn:hover { color: var(--red); border-color: var(--red); }
+.theme-btn {
+  background: transparent; border: 1px solid var(--b2); color: var(--t2);
+  border-radius: 3px; padding: 6px 10px; font-size: 14px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s; line-height: 1;
+}
+.theme-btn:hover { border-color: var(--primary); color: var(--primary); }
 
 /* Body */
 #body { display: flex; flex: 1; overflow: hidden; }
@@ -413,6 +439,9 @@ tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
           <div class="topbar-role">ROLE: ADMIN</div>
         </div>
       </div>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <span id="theme-icon">☀</span>
+      </button>
       <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </div>
@@ -1382,6 +1411,19 @@ function updateKPI() {
   const kpiCards = document.querySelectorAll('.kpi-value');
   // vessels in DB
   if (kpiCards[1]) kpiCards[1].textContent = state.vessels.length;
+}
+
+// ── THEME ──
+function toggleTheme() {
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-icon');
+  if (root.getAttribute('data-theme') === 'light') {
+    root.removeAttribute('data-theme');
+    btn.textContent = '☀';
+  } else {
+    root.setAttribute('data-theme', 'light');
+    btn.textContent = '☾';
+  }
 }
 
 // ── ESC KEY ──
