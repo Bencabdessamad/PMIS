@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PORTEX — Maritime Port Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080C10;
+  --s1: #0D1117;
+  --s2: #111820;
+  --s3: #161E28;
+  --s4: #1A2333;
+  --primary: #00D4AA;
+  --b1: #1E2D3D;
+  --b2: #2A3F55;
+  --t1: #E2EAF4;
+  --t2: #7A8FA6;
+  --green: #22C55E;
+  --orange: #F59E0B;
+  --red: #EF4444;
+  --purple: #A855F7;
+  --blue: #3B82F6;
+  --teal: #00D4AA;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--t1); font-family: 'Inter', sans-serif; font-size: 14px; overflow: hidden; }
+
+/* ── AUTH SCREENS ── */
+#auth-wrapper {
+  display: flex; align-items: center; justify-content: center;
+  height: 100vh; background: var(--bg);
+}
+.auth-card {
+  width: 420px; background: var(--s3); border: 1px solid var(--b1);
+  border-radius: 3px; padding: 40px;
+}
+.auth-logo {
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
+  color: var(--primary); letter-spacing: 0.08em; margin-bottom: 6px;
+}
+.auth-sub { font-size: 12px; color: var(--t2); margin-bottom: 32px; font-family: 'JetBrains Mono', monospace; }
+.auth-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--t1); margin-bottom: 6px; }
+.auth-desc { font-size: 13px; color: var(--t2); margin-bottom: 28px; }
+
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 11px; font-weight: 600; color: var(--t2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+.form-input {
+  width: 100%; background: var(--s2); border: 1px solid var(--b2);
+  border-radius: 3px; padding: 10px 14px; color: var(--t1);
+  font-family: 'Inter', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.15s;
+}
+.form-input:focus { border-color: var(--primary); }
+.form-input::placeholder { color: var(--t2); opacity: 0.6; }
+
+.btn-primary {
+  width: 100%; background: var(--primary); color: #080C10;
+  border: none; border-radius: 3px; padding: 12px; font-size: 14px;
+  font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer;
+  transition: opacity 0.15s; letter-spacing: 0.02em;
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary {
+  background: transparent; border: 1px solid var(--b2); color: var(--t2);
+  border-radius: 3px; padding: 8px 16px; font-size: 13px;
+  font-family: 'Inter', sans-serif; cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.btn-secondary:hover { border-color: var(--primary); color: var(--t1); }
+
+.auth-footer {
+  margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--b1);
+  display: flex; align-items: center; gap: 8px;
+}
+.tls-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.tls-text { font-size: 11px; color: var(--t2); font-family: 'JetBrains Mono', monospace; }
+
+/* ── MFA ── */
+.otp-grid { display: flex; gap: 10px; justify-content: center; margin: 24px 0; }
+.otp-input {
+  width: 52px; height: 60px; background: var(--s2); border: 1px solid var(--b2);
+  border-radius: 3px; color: var(--t1); font-family: 'JetBrains Mono', monospace;
+  font-size: 24px; font-weight: 600; text-align: center; outline: none;
+  transition: border-color 0.15s;
+}
+.otp-input:focus { border-color: var(--primary); }
+.countdown-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--s2); border: 1px solid var(--b1); border-radius: 3px;
+  padding: 10px 14px; margin-bottom: 20px;
+}
+.countdown-label { font-size: 11px; color: var(--t2); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; }
+.countdown-val { font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--orange); }
+.resend-row { text-align: center; margin-top: 16px; font-size: 12px; color: var(--t2); }
+.resend-link { color: var(--primary); cursor: pointer; text-decoration: underline; }
+
+/* ── APP SHELL ── */
+#app { display: none; height: 100vh; flex-direction: column; }
+#app.visible { display: flex; }
+
+/* Topbar */
+#topbar {
+  height: 56px; background: var(--s1); border-bottom: 1px solid var(--b1);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; flex-shrink: 0; z-index: 100;
+}
+.topbar-brand { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 0.1em; }
+.topbar-right { display: flex; align-items: center; gap: 20px; }
+.topbar-time { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--t2); }
+.topbar-user { display: flex; align-items: center; gap: 10px; }
+.topbar-avatar {
+  width: 32px; height: 32px; border-radius: 3px; background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #080C10;
+}
+.topbar-name { font-size: 13px; font-weight: 500; color: var(--t1); }
+.topbar-role { font-size: 11px; color: var(--t2); font-family: 'JetBrains Mono', monospace; }
+.logout-btn {
+  background: transparent; border: 1px solid var(--b2); color: var(--t2);
+  border-radius: 3px; padding: 6px 12px; font-size: 12px; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: color 0.15s, border-color 0.15s;
+}
+.logout-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* Body */
+#body { display: flex; flex: 1; overflow: hidden; }
+
+/* Sidebar */
+#sidebar {
+  width: 220px; background: var(--s1); border-right: 1px solid var(--b1);
+  display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+}
+.sidebar-section { padding: 20px 12px 8px; }
+.sidebar-section-label { font-size: 9px; font-weight: 600; color: var(--t2); text-transform: uppercase; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace; padding: 0 8px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 3px; cursor: pointer;
+  color: var(--t2); font-size: 13px; font-weight: 500;
+  transition: color 0.15s, background 0.15s; border-left: 2px solid transparent;
+  position: relative; margin-bottom: 1px;
+}
+.nav-item:hover { color: var(--t1); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--primary); background: rgba(0,212,170,0.06); border-left-color: var(--primary); }
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Main */
+#main { flex: 1; overflow-y: auto; background: var(--bg); }
+.screen { display: none; padding: 28px; min-height: 100%; }
+.screen.active { display: block; }
+
+/* Page header */
+.page-header { margin-bottom: 24px; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--t1); }
+.page-subtitle { font-size: 12px; color: var(--t2); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+/* KPI Cards */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--s3); border: 1px solid var(--b1); border-radius: 3px;
+  padding: 20px; position: relative; overflow: hidden;
+}
+.kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi-label { font-size: 10px; font-weight: 600; color: var(--t2); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; }
+.kpi-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--t1); line-height: 1; }
+.kpi-unit { font-size: 11px; color: var(--t2); margin-top: 8px; font-family: 'JetBrains Mono', monospace; }
+
+/* Panels */
+.panels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.panel { background: var(--s3); border: 1px solid var(--b1); border-radius: 3px; }
+.panel-header { padding: 14px 18px; border-bottom: 1px solid var(--b1); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; color: var(--t1); }
+.panel-body { padding: 18px; }
+.feed-empty { font-size: 12px; color: var(--t2); text-align: center; padding: 32px 0; font-family: 'JetBrains Mono', monospace; }
+
+/* Status items */
+.status-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--b1); }
+.status-item:last-child { border-bottom: none; }
+.status-name { font-size: 13px; color: var(--t1); }
+.status-sub { font-size: 11px; color: var(--t2); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+.status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 2px; font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; }
+.status-badge .dot { width: 5px; height: 5px; border-radius: 50%; }
+.badge-green { background: rgba(34,197,94,0.12); color: var(--green); }
+.badge-green .dot { background: var(--green); }
+.badge-orange { background: rgba(245,158,11,0.12); color: var(--orange); }
+.badge-orange .dot { background: var(--orange); }
+.badge-red { background: rgba(239,68,68,0.12); color: var(--red); }
+.badge-red .dot { background: var(--red); }
+.badge-blue { background: rgba(59,130,246,0.12); color: var(--blue); }
+.badge-blue .dot { background: var(--blue); }
+.badge-purple { background: rgba(168,85,247,0.12); color: var(--purple); }
+.badge-purple .dot { background: var(--purple); }
+.badge-teal { background: rgba(0,212,170,0.12); color: var(--teal); }
+.badge-teal .dot { background: var(--teal); }
+.badge-grey { background: rgba(122,143,166,0.12); color: var(--t2); }
+.badge-grey .dot { background: var(--t2); }
+
+/* Toolbar */
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar-search {
+  flex: 1; min-width: 200px; background: var(--s2); border: 1px solid var(--b2);
+  border-radius: 3px; padding: 8px 14px; color: var(--t1);
+  font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+  transition: border-color 0.15s;
+}
+.toolbar-search:focus { border-color: var(--primary); }
+.toolbar-search::placeholder { color: var(--t2); opacity: 0.7; }
+.toolbar-select {
+  background: var(--s2); border: 1px solid var(--b2); border-radius: 3px;
+  padding: 8px 12px; color: var(--t1); font-family: 'Inter', sans-serif;
+  font-size: 13px; outline: none; cursor: pointer; transition: border-color 0.15s;
+}
+.toolbar-select:focus { border-color: var(--primary); }
+.add-btn {
+  background: var(--primary); color: #080C10; border: none; border-radius: 3px;
+  padding: 9px 16px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif;
+  cursor: pointer; white-space: nowrap; transition: opacity 0.15s; letter-spacing: 0.02em;
+}
+.add-btn:hover { opacity: 0.88; }
+
+/* Tabs */
+.tabs { display: flex; border-bottom: 1px solid var(--b1); margin-bottom: 20px; }
+.tab {
+  padding: 10px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+  color: var(--t2); border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s;
+}
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* Table */
+.table-wrap { background: var(--s3); border: 1px solid var(--b1); border-radius: 3px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--s4); }
+th {
+  padding: 10px 14px; font-size: 9px; font-weight: 600; color: var(--t2);
+  text-transform: uppercase; letter-spacing: 0.12em; font-family: 'JetBrains Mono', monospace;
+  text-align: left; border-bottom: 1px solid var(--b1); white-space: nowrap;
+}
+td { padding: 12px 14px; font-size: 13px; color: var(--t1); border-bottom: 1px solid var(--b1); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.1s; cursor: default; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.table-empty { text-align: center; padding: 48px; color: var(--t2); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+
+/* Action btns */
+.action-row { display: flex; gap: 6px; }
+.act-btn {
+  background: transparent; border: 1px solid var(--b2); border-radius: 2px;
+  padding: 4px 10px; font-size: 11px; font-family: 'Inter', sans-serif;
+  color: var(--t2); cursor: pointer; transition: all 0.15s;
+}
+.act-btn:hover { color: var(--t1); border-color: var(--t2); }
+.act-btn.danger:hover { color: var(--red); border-color: var(--red); }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(8,12,16,0.85);
+  backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-panel {
+  background: var(--s3); border: 1px solid var(--b2); border-radius: 3px;
+  width: 540px; max-height: 90vh; overflow-y: auto; padding: 28px;
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--t1); }
+.modal-close { background: transparent; border: none; color: var(--t2); font-size: 20px; cursor: pointer; line-height: 1; padding: 0 4px; }
+.modal-close:hover { color: var(--t1); }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.modal-grid .full { grid-column: 1/-1; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--b1); }
+
+/* Side panel */
+.side-panel {
+  position: fixed; top: 56px; right: 0; bottom: 0; width: 400px;
+  background: var(--s3); border-left: 1px solid var(--b2); z-index: 200;
+  overflow-y: auto; transform: translateX(100%); transition: transform 0.25s ease;
+}
+.side-panel.open { transform: translateX(0); }
+.side-panel-header { padding: 20px; border-bottom: 1px solid var(--b1); display: flex; align-items: center; justify-content: space-between; }
+.side-panel-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--t1); }
+.side-panel-close { background: transparent; border: none; color: var(--t2); font-size: 18px; cursor: pointer; }
+.side-panel-body { padding: 20px; }
+.sp-section { margin-bottom: 24px; }
+.sp-section-title { font-size: 10px; font-weight: 600; color: var(--t2); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; }
+.sp-field { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--b1); }
+.sp-field:last-child { border-bottom: none; }
+.sp-key { font-size: 12px; color: var(--t2); }
+.sp-val { font-size: 12px; color: var(--t1); font-family: 'JetBrains Mono', monospace; }
+
+/* Services Catalog */
+.services-section { margin-bottom: 32px; }
+.services-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.services-section-label {
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--t2); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.section-line { flex: 1; height: 1px; background: var(--b1); }
+.services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.svc-card {
+  background: var(--s3); border: 1px solid var(--b1); border-radius: 3px;
+  padding: 18px; position: relative; overflow: hidden;
+}
+.svc-card-accent { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; }
+.svc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.imo-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+  padding: 3px 8px; border-radius: 2px; background: var(--s4); color: var(--t2); border: 1px solid var(--b1);
+}
+.svc-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.svc-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--t1); margin-bottom: 6px; }
+.svc-resources { font-size: 12px; color: var(--t2); line-height: 1.6; }
+.svc-hm { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--primary); font-family: 'JetBrains Mono', monospace; margin-top: 10px; }
+.svc-hm::before { content: ''; display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
+
+/* Audit log */
+.audit-entry {
+  padding: 12px 0; border-bottom: 1px solid var(--b1); display: flex;
+  align-items: flex-start; gap: 14px;
+}
+.audit-entry:last-child { border-bottom: none; }
+.audit-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t2); margin-top: 4px; flex-shrink: 0; }
+.audit-time { font-size: 11px; color: var(--t2); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.audit-msg { font-size: 13px; color: var(--t1); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--t2); }
+
+/* SVG icons inline */
+.icon { display: inline-block; width: 16px; height: 16px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ AUTH WRAPPER ══════════════ -->
+<div id="auth-wrapper">
+
+  <!-- LOGIN -->
+  <div id="login-screen" class="auth-card">
+    <div class="auth-logo">PORTEX</div>
+    <div class="auth-sub">PORT MANAGEMENT INFORMATION SYSTEM</div>
+    <div class="auth-title">Sign In to PORTEX</div>
+    <div class="auth-desc">Enter your credentials to access the maritime management portal.</div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" type="email" id="login-email" placeholder="admin@portex.maritime" value="admin@portex.maritime">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="login-pass" placeholder="••••••••" value="password">
+    </div>
+
+    <button class="btn-primary" onclick="goToMFA()" style="margin-top:8px;">Sign In to PORTEX</button>
+
+    <div class="auth-footer">
+      <div class="tls-dot"></div>
+      <span class="tls-text">TLS 1.3 Encrypted — All data is encrypted in transit</span>
+    </div>
+  </div>
+
+  <!-- MFA -->
+  <div id="mfa-screen" class="auth-card" style="display:none;">
+    <div class="auth-logo">PORTEX</div>
+    <div class="auth-sub">PORT MANAGEMENT INFORMATION SYSTEM</div>
+    <div class="auth-title">Two-Factor Authentication</div>
+    <div class="auth-desc">Enter the 6-digit code sent to your registered device.</div>
+
+    <div class="otp-grid">
+      <input class="otp-input" type="text" maxlength="1" id="otp0" oninput="otpAdvance(this,0)">
+      <input class="otp-input" type="text" maxlength="1" id="otp1" oninput="otpAdvance(this,1)">
+      <input class="otp-input" type="text" maxlength="1" id="otp2" oninput="otpAdvance(this,2)">
+      <input class="otp-input" type="text" maxlength="1" id="otp3" oninput="otpAdvance(this,3)">
+      <input class="otp-input" type="text" maxlength="1" id="otp4" oninput="otpAdvance(this,4)">
+      <input class="otp-input" type="text" maxlength="1" id="otp5" oninput="otpAdvance(this,5)">
+    </div>
+
+    <div class="countdown-bar">
+      <span class="countdown-label">Code expires in</span>
+      <span class="countdown-val" id="countdown">04:59</span>
+    </div>
+
+    <button class="btn-primary" onclick="goToDashboard()">Verify &amp; Access PORTEX</button>
+    <div class="resend-row">Didn't receive a code? <span class="resend-link" onclick="resetCountdown()">Resend</span></div>
+
+    <div class="auth-footer">
+      <div class="tls-dot"></div>
+      <span class="tls-text">TLS 1.3 Encrypted — All data is encrypted in transit</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════ APP SHELL ══════════════ -->
+<div id="app">
+
+  <!-- Topbar -->
+  <div id="topbar">
+    <div class="topbar-brand">PORTEX</div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="topbar-clock">--:--:-- UTC</div>
+      <div class="topbar-user">
+        <div class="topbar-avatar">SA</div>
+        <div>
+          <div class="topbar-name">System Admin</div>
+          <div class="topbar-role">ROLE: ADMIN</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div id="body">
+
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <div class="nav-item active" onclick="navigate('dashboard')">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor" opacity=".8"/><rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor" opacity=".8"/><rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".4"/></svg>
+          Dashboard
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Administration</div>
+        <div class="nav-item" onclick="navigate('users')">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1 14c0-3 2-5 5-5s5 2 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M11 7l2 2 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          User Management
+        </div>
+        <div class="nav-item" onclick="navigate('vessels')">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 12l2-6h8l2 6H2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M5 6V4a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.2"/><path d="M1 13.5s2-1.5 7-1.5 7 1.5 7 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Vessel Database
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Operations</div>
+        <div class="nav-item" onclick="navigate('services')">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M4 15h8M8 11v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M5 5h6M5 7.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Services Catalog
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main id="main">
+
+      <!-- ── DASHBOARD ── -->
+      <div id="screen-dashboard" class="screen active">
+        <div class="page-header">
+          <div class="page-title">Operations Dashboard</div>
+          <div class="page-subtitle">REAL-TIME PORT MONITORING — UTC+00:00</div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-accent" style="background:var(--primary)"></div>
+            <div class="kpi-label">Active Visits</div>
+            <div class="kpi-value">0</div>
+            <div class="kpi-unit">VESSELS CURRENTLY IN PORT</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-accent" style="background:var(--blue)"></div>
+            <div class="kpi-label">Vessels in DB</div>
+            <div class="kpi-value">0</div>
+            <div class="kpi-unit">REGISTERED VESSELS TOTAL</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-accent" style="background:var(--green)"></div>
+            <div class="kpi-label">Active Users</div>
+            <div class="kpi-value">1</div>
+            <div class="kpi-unit">ONLINE NOW</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-accent" style="background:var(--orange)"></div>
+            <div class="kpi-label">Pending Approvals</div>
+            <div class="kpi-value">0</div>
+            <div class="kpi-unit">AWAITING REVIEW</div>
+          </div>
+        </div>
+
+        <div class="panels-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">Activity Feed</div>
+              <span class="status-badge badge-green"><span class="dot"></span>LIVE</span>
+            </div>
+            <div class="panel-body">
+              <div class="audit-entry">
+                <div class="audit-dot" style="background:var(--green)"></div>
+                <div>
+                  <div class="audit-time">2026-05-04 — 00:00:01 UTC</div>
+                  <div class="audit-msg">System initialized. PORTEX operational.</div>
+                </div>
+              </div>
+              <div class="audit-entry">
+                <div class="audit-dot" style="background:var(--primary)"></div>
+                <div>
+                  <div class="audit-time">2026-05-04 — 00:00:03 UTC</div>
+                  <div class="audit-msg">Administrator login authenticated via MFA.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">System Status</div>
+            </div>
+            <div class="panel-body">
+              <div class="status-item">
+                <div>
+                  <div class="status-name">Core API</div>
+                  <div class="status-sub">portex-api.internal:8443</div>
+                </div>
+                <span class="status-badge badge-green"><span class="dot"></span>OPERATIONAL</span>
+              </div>
+              <div class="status-item">
+                <div>
+                  <div class="status-name">VTS Radar Feed</div>
+                  <div class="status-sub">vts-feed.internal:5010</div>
+                </div>
+                <span class="status-badge badge-green"><span class="dot"></span>OPERATIONAL</span>
+              </div>
+              <div class="status-item">
+                <div>
+                  <div class="status-name">AIS Ingestion</div>
+                  <div class="status-sub">ais-stream.portex:9090</div>
+                </div>
+                <span class="status-badge badge-green"><span class="dot"></span>OPERATIONAL</span>
+              </div>
+              <div class="status-item">
+                <div>
+                  <div class="status-name">Document Store</div>
+                  <div class="status-sub">minio.portex.internal</div>
+                </div>
+                <span class="status-badge badge-green"><span class="dot"></span>OPERATIONAL</span>
+              </div>
+              <div class="status-item">
+                <div>
+                  <div class="status-name">Auth Service</div>
+                  <div class="status-sub">auth.portex.internal:3001</div>
+                </div>
+                <span class="status-badge badge-green"><span class="dot"></span>OPERATIONAL</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── USER MANAGEMENT ── -->
+      <div id="screen-users" class="screen">
+        <div class="page-header">
+          <div class="page-title">User Management</div>
+          <div class="page-subtitle">MANAGE PORT SYSTEM USERS AND ACCESS CONTROL</div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('users','tab-users','tab-audit')">Users</div>
+          <div class="tab" onclick="switchTab('users','tab-audit','tab-users')">Audit Log</div>
+        </div>
+
+        <!-- Users tab -->
+        <div id="tab-users">
+          <div class="toolbar">
+            <input class="toolbar-search" type="text" placeholder="Search by name, email, or ID…" oninput="filterUsers(this.value)">
+            <select class="toolbar-select" id="role-filter" onchange="filterUsers()">
+              <option value="">All Roles</option>
+              <option value="HM">Harbour Master</option>
+              <option value="Agent">Agent</option>
+              <option value="SP">Service Provider</option>
+              <option value="VTS">VTS Officer</option>
+              <option value="Admin">Administrator</option>
+            </select>
+            <select class="toolbar-select" id="status-filter" onchange="filterUsers()">
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Pending">Pending</option>
+              <option value="Suspended">Suspended</option>
+            </select>
+            <button class="add-btn" onclick="openModal('user-modal')">+ Add User</button>
+          </div>
+
+          <div class="table-wrap">
+            <table id="users-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Name</th><th>Email</th><th>Role</th>
+                  <th>Organization</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr><td colspan="7" class="table-empty">No users found. Add a user to get started.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Audit tab -->
+        <div id="tab-audit" style="display:none;">
+          <div class="table-wrap" style="padding:0;">
+            <div style="padding:20px;" id="audit-log-body">
+              <div class="audit-entry">
+                <div class="audit-dot" style="background:var(--primary)"></div>
+                <div>
+                  <div class="audit-time">2026-05-04 00:00:03 UTC</div>
+                  <div class="audit-msg">Administrator <strong>System Admin</strong> authenticated successfully.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VESSEL DATABASE ── -->
+      <div id="screen-vessels" class="screen">
+        <div class="page-header">
+          <div class="page-title">Vessel Database</div>
+          <div class="page-subtitle">IMO-COMPLIANT VESSEL REGISTRY</div>
+        </div>
+
+        <div class="toolbar">
+          <input class="toolbar-search" type="text" placeholder="Search by IMO, name, or owner…" oninput="filterVessels(this.value)">
+          <select class="toolbar-select" id="type-filter" onchange="filterVessels()">
+            <option value="">All Types</option>
+            <option value="Bulk Carrier">Bulk Carrier</option>
+            <option value="Container">Container</option>
+            <option value="Tanker">Tanker</option>
+            <option value="General Cargo">General Cargo</option>
+            <option value="RoRo">RoRo</option>
+            <option value="Passenger">Passenger</option>
+            <option value="LNG Carrier">LNG Carrier</option>
+          </select>
+          <select class="toolbar-select" id="flag-filter" onchange="filterVessels()">
+            <option value="">All Flags</option>
+            <option value="Panama">Panama</option>
+            <option value="Liberia">Liberia</option>
+            <option value="Marshall Islands">Marshall Islands</option>
+            <option value="Bahamas">Bahamas</option>
+            <option value="Malta">Malta</option>
+            <option value="Cyprus">Cyprus</option>
+            <option value="Singapore">Singapore</option>
+          </select>
+          <select class="toolbar-select" id="vstatus-filter" onchange="filterVessels()">
+            <option value="">All Statuses</option>
+            <option value="Registered">Registered</option>
+            <option value="Blacklisted">Blacklisted</option>
+            <option value="Under Review">Under Review</option>
+          </select>
+          <button class="add-btn" onclick="openModal('vessel-modal')">+ Add Vessel</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="vessels-table">
+            <thead>
+              <tr>
+                <th>IMO No.</th><th>Vessel Name</th><th>Type</th><th>Flag</th>
+                <th>LOA (m)</th><th>Draught (m)</th><th>GT</th><th>Owner</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="vessels-tbody">
+              <tr><td colspan="9" class="table-empty">No vessels registered. Add a vessel to the database.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── SERVICES CATALOG ── -->
+      <div id="screen-services" class="screen">
+        <div class="page-header">
+          <div class="page-title">Services Catalog</div>
+          <div class="page-subtitle">PORT SERVICE DEFINITIONS AND RESOURCE REQUIREMENTS</div>
+        </div>
+
+        <!-- Section A: Principal -->
+        <div class="services-section">
+          <div class="services-section-header">
+            <div class="services-section-label" style="color:var(--primary)">A — Principal Services</div>
+            <div class="section-line"></div>
+            <span class="status-badge badge-teal"><span class="dot"></span>MANDATORY</span>
+          </div>
+          <div class="services-grid">
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--primary)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">PILO</span>
+                <div class="svc-badges">
+                  <span class="status-badge badge-teal"><span class="dot"></span>MANDATORY</span>
+                </div>
+              </div>
+              <div class="svc-name">Pilotage</div>
+              <div class="svc-resources">
+                Pilot × 1<br>
+                Pilot Boat × 1
+              </div>
+              <div class="svc-hm">HM Authorization Required</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--primary)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">TOWG</span>
+                <div class="svc-badges">
+                  <span class="status-badge badge-teal"><span class="dot"></span>MANDATORY</span>
+                </div>
+              </div>
+              <div class="svc-name">Tug Assistance</div>
+              <div class="svc-resources">
+                Tug Boat × N (based on vessel tonnage)
+              </div>
+              <div class="svc-hm">HM Authorization Required</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--primary)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">MOOR</span>
+                <div class="svc-badges">
+                  <span class="status-badge badge-teal"><span class="dot"></span>MANDATORY</span>
+                </div>
+              </div>
+              <div class="svc-name">Mooring Service</div>
+              <div class="svc-resources">
+                Mooring Man × N<br>
+                Vehicle × N (based on berth)
+              </div>
+              <div class="svc-hm">HM Authorization Required</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section B: Standard -->
+        <div class="services-section">
+          <div class="services-section-header">
+            <div class="services-section-label" style="color:var(--t2)">B — Standard Services</div>
+            <div class="section-line"></div>
+            <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+          </div>
+          <div class="services-grid">
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">POTW</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Fresh Water Supply</div>
+              <div class="svc-resources">Water Barge × 1 — Quantity on request</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">TRSH</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Solid Waste Collection</div>
+              <div class="svc-resources">Waste Truck × 1 — MARPOL Annex V</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">SLOP</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Liquid Waste (Slops)</div>
+              <div class="svc-resources">Slop Barge × 1 — MARPOL Annex I/II</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">BUNK</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Bunkering</div>
+              <div class="svc-resources">Bunker Barge × 1 — HFO / MGO / LNG</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">HLTH</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Medical Assistance</div>
+              <div class="svc-resources">Medical Team × 1 — Port Health Officer</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">IMGT</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Crew Change</div>
+              <div class="svc-resources">Immigration Officer × 1 — Transport × 1</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">EMCY</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Firefighting Support</div>
+              <div class="svc-resources">Fire Tender × 1 — Crew × N on standby</div>
+            </div>
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--b2)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">PROV</span>
+                <span class="status-badge badge-grey"><span class="dot"></span>OPTIONAL</span>
+              </div>
+              <div class="svc-name">Shipchandling</div>
+              <div class="svc-resources">Chandler Agent × 1 — Delivery Vehicle × 1</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section C: Permits -->
+        <div class="services-section">
+          <div class="services-section-header">
+            <div class="services-section-label" style="color:var(--purple)">C — Permits</div>
+            <div class="section-line"></div>
+            <span class="status-badge badge-purple"><span class="dot"></span>PERMIT REQUIRED</span>
+          </div>
+          <div class="services-grid">
+            <div class="svc-card">
+              <div class="svc-card-accent" style="background:var(--purple)"></div>
+              <div class="svc-top">
+                <span class="imo-badge">DIVG</span>
+                <span class="status-badge badge-purple"><span class="dot"></span>PERMIT</span>
+              </div>
+              <div class="svc-name">Diving Operations</div>
+              <div class="svc-resources">
+                Dive Supervisor × 1<br>
+                Diver × N — Safety Boat × 1
+              </div>
+              <div class="svc-hm" style="color:var(--purple)">Port Authority Permit Required</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="user-modal" onclick="closeModalOutside(event,'user-modal')">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title">Add New User</div>
+      <button class="modal-close" onclick="closeModal('user-modal')">×</button>
+    </div>
+    <div class="modal-grid">
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        <input class="form-input" id="u-fname" placeholder="John">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <input class="form-input" id="u-lname" placeholder="Smith">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" id="u-email" type="email" placeholder="j.smith@portex.maritime">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-input" id="u-role">
+          <option value="">Select Role</option>
+          <option value="HM">Harbour Master</option>
+          <option value="Agent">Agent</option>
+          <option value="SP">Service Provider</option>
+          <option value="VTS">VTS Officer</option>
+          <option value="Admin">Administrator</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="u-status">
+          <option value="Pending">Pending</option>
+          <option value="Active">Active</option>
+          <option value="Suspended">Suspended</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Organization</label>
+        <input class="form-input" id="u-org" placeholder="Maritime Authority of…">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="add-btn" onclick="addUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Vessel Modal -->
+<div class="modal-overlay" id="vessel-modal" onclick="closeModalOutside(event,'vessel-modal')">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title">Register Vessel</div>
+      <button class="modal-close" onclick="closeModal('vessel-modal')">×</button>
+    </div>
+    <div class="modal-grid">
+      <div class="form-group">
+        <label class="form-label">IMO Number</label>
+        <input class="form-input" id="v-imo" placeholder="IMO 1234567" style="font-family:'JetBrains Mono',monospace;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vessel Name</label>
+        <input class="form-input" id="v-name" placeholder="MV ATLANTIC STAR">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vessel Type</label>
+        <select class="form-input" id="v-type">
+          <option value="">Select Type</option>
+          <option>Bulk Carrier</option>
+          <option>Container</option>
+          <option>Tanker</option>
+          <option>General Cargo</option>
+          <option>RoRo</option>
+          <option>Passenger</option>
+          <option>LNG Carrier</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Flag State</label>
+        <select class="form-input" id="v-flag">
+          <option value="">Select Flag</option>
+          <option>Panama</option>
+          <option>Liberia</option>
+          <option>Marshall Islands</option>
+          <option>Bahamas</option>
+          <option>Malta</option>
+          <option>Cyprus</option>
+          <option>Singapore</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">LOA (metres)</label>
+        <input class="form-input" id="v-loa" type="number" placeholder="225.0" style="font-family:'JetBrains Mono',monospace;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Draught (metres)</label>
+        <input class="form-input" id="v-draught" type="number" placeholder="12.5" style="font-family:'JetBrains Mono',monospace;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gross Tonnage</label>
+        <input class="form-input" id="v-gt" type="number" placeholder="45000" style="font-family:'JetBrains Mono',monospace;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="v-status">
+          <option value="Registered">Registered</option>
+          <option value="Under Review">Under Review</option>
+          <option value="Blacklisted">Blacklisted</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Registered Owner</label>
+        <input class="form-input" id="v-owner" placeholder="Oceanic Shipping Ltd.">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('vessel-modal')">Cancel</button>
+      <button class="add-btn" onclick="addVessel()">Register Vessel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Vessel Side Panel -->
+<div class="side-panel" id="vessel-panel">
+  <div class="side-panel-header">
+    <div class="side-panel-title" id="vp-title">Vessel Profile</div>
+    <button class="side-panel-close" onclick="closeSidePanel()">×</button>
+  </div>
+  <div class="side-panel-body" id="vp-body"></div>
+</div>
+
+<!-- ══════════════ JAVASCRIPT ══════════════ -->
+<script>
+// ── STATE ──
+const state = {
+  users: [],
+  vessels: [],
+  userIdCounter: 1000,
+  vesselIdCounter: 1,
+  currentScreen: 'dashboard',
+};
+
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getUTCHours()).padStart(2,'0');
+  const m = String(now.getUTCMinutes()).padStart(2,'0');
+  const s = String(now.getUTCSeconds()).padStart(2,'0');
+  const el = document.getElementById('topbar-clock');
+  if (el) el.textContent = `${h}:${m}:${s} UTC`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── COUNTDOWN MFA ──
+let countdownInterval = null;
+let countdownSecs = 299;
+
+function formatCountdown(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function startCountdown() {
+  countdownSecs = 299;
+  clearInterval(countdownInterval);
+  const el = document.getElementById('countdown');
+  countdownInterval = setInterval(() => {
+    countdownSecs--;
+    if (el) el.textContent = formatCountdown(countdownSecs);
+    if (countdownSecs <= 0) {
+      clearInterval(countdownInterval);
+      if (el) { el.textContent = '00:00'; el.style.color = 'var(--red)'; }
+    } else if (countdownSecs <= 60) {
+      if (el) el.style.color = 'var(--red)';
+    } else {
+      if (el) el.style.color = 'var(--orange)';
+    }
+  }, 1000);
+}
+
+function resetCountdown() {
+  const el = document.getElementById('countdown');
+  if (el) el.style.color = 'var(--orange)';
+  startCountdown();
+}
+
+// ── OTP INPUT ──
+function otpAdvance(input, idx) {
+  input.value = input.value.replace(/[^0-9]/g,'').slice(-1);
+  if (input.value && idx < 5) {
+    document.getElementById('otp' + (idx + 1)).focus();
+  }
+}
+
+// Add backspace support for OTP
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Backspace') {
+    const active = document.activeElement;
+    if (active && active.classList.contains('otp-input')) {
+      const idx = parseInt(active.id.replace('otp',''));
+      if (!active.value && idx > 0) {
+        const prev = document.getElementById('otp'+(idx-1));
+        prev.value = '';
+        prev.focus();
+      }
+    }
+  }
+});
+
+// ── AUTH FLOW ──
+function goToMFA() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('mfa-screen').style.display = 'block';
+  startCountdown();
+  setTimeout(() => document.getElementById('otp0').focus(), 100);
+}
+
+function goToDashboard() {
+  clearInterval(countdownInterval);
+  document.getElementById('auth-wrapper').style.display = 'none';
+  const app = document.getElementById('app');
+  app.classList.add('visible');
+  navigate('dashboard');
+}
+
+function logout() {
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('auth-wrapper').style.display = 'flex';
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('mfa-screen').style.display = 'none';
+  // Reset OTP
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('otp'+i);
+    if (el) el.value = '';
+  }
+  clearInterval(countdownInterval);
+}
+
+// ── NAVIGATION ──
+function navigate(screen) {
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const clicked = [...document.querySelectorAll('.nav-item')].find(el =>
+    el.getAttribute('onclick') && el.getAttribute('onclick').includes("'"+screen+"'")
+  );
+  if (clicked) clicked.classList.add('active');
+
+  // Show screen
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  const s = document.getElementById('screen-' + screen);
+  if (s) s.classList.add('active');
+
+  state.currentScreen = screen;
+  closeSidePanel();
+}
+
+// ── TABS ──
+function switchTab(screen, showId, hideId) {
+  document.getElementById(showId).style.display = 'block';
+  document.getElementById(hideId).style.display = 'none';
+
+  const tabs = document.querySelectorAll('#screen-' + screen + ' .tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ── MODALS ──
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeModalOutside(e, id) {
+  if (e.target === e.currentTarget) closeModal(id);
+}
+
+// ── USERS ──
+function roleBadge(role) {
+  const map = {
+    HM:    ['badge-teal',   'Harbour Master'],
+    Agent: ['badge-blue',   'Agent'],
+    SP:    ['badge-orange', 'Service Provider'],
+    VTS:   ['badge-purple', 'VTS Officer'],
+    Admin: ['badge-red',    'Administrator'],
+  };
+  const [cls, label] = map[role] || ['badge-grey', role];
+  return `<span class="status-badge ${cls}"><span class="dot"></span>${label}</span>`;
+}
+
+function statusBadge(status) {
+  const map = {
+    Active:    'badge-green',
+    Pending:   'badge-orange',
+    Suspended: 'badge-red',
+  };
+  const cls = map[status] || 'badge-grey';
+  return `<span class="status-badge ${cls}"><span class="dot"></span>${status.toUpperCase()}</span>`;
+}
+
+function renderUsers() {
+  const search = (document.querySelector('#tab-users .toolbar-search') || {value:''}).value.toLowerCase();
+  const roleF = document.getElementById('role-filter').value;
+  const statusF = document.getElementById('status-filter').value;
+
+  const filtered = state.users.filter(u => {
+    const matchSearch = !search ||
+      u.name.toLowerCase().includes(search) ||
+      u.email.toLowerCase().includes(search) ||
+      u.id.toLowerCase().includes(search);
+    const matchRole = !roleF || u.role === roleF;
+    const matchStatus = !statusF || u.status === statusF;
+    return matchSearch && matchRole && matchStatus;
+  });
+
+  const tbody = document.getElementById('users-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${state.users.length === 0 ? 'No users found. Add a user to get started.' : 'No users match the current filters.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(u => `
+    <tr>
+      <td class="mono">${u.id}</td>
+      <td style="font-weight:500;">${u.name}</td>
+      <td class="mono" style="font-size:12px;color:var(--t2)">${u.email}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td style="color:var(--t2);font-size:12px;">${u.org}</td>
+      <td>${statusBadge(u.status)}</td>
+      <td>
+        <div class="action-row">
+          <button class="act-btn" onclick="editUserStatus('${u.id}')">Edit</button>
+          <button class="act-btn danger" onclick="deleteUser('${u.id}')">Remove</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterUsers(val) { renderUsers(); }
+
+function addUser() {
+  const fname = document.getElementById('u-fname').value.trim();
+  const lname = document.getElementById('u-lname').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const role  = document.getElementById('u-role').value;
+  const status= document.getElementById('u-status').value;
+  const org   = document.getElementById('u-org').value.trim();
+
+  if (!fname || !lname || !email || !role) {
+    alert('Please fill in all required fields (Name, Email, Role).');
+    return;
+  }
+
+  const id = 'USR-' + (++state.userIdCounter);
+  state.users.push({ id, name: fname+' '+lname, email, role, status, org });
+  closeModal('user-modal');
+  // Reset
+  ['u-fname','u-lname','u-email','u-org'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('u-role').value = '';
+  document.getElementById('u-status').value = 'Pending';
+  renderUsers();
+  addAuditEntry(`User <strong>${fname} ${lname}</strong> (${id}) created with role ${role}.`);
+}
+
+function deleteUser(id) {
+  if (!confirm('Remove this user from the system?')) return;
+  const u = state.users.find(x => x.id === id);
+  state.users = state.users.filter(x => x.id !== id);
+  renderUsers();
+  if (u) addAuditEntry(`User <strong>${u.name}</strong> (${id}) removed from system.`);
+}
+
+function editUserStatus(id) {
+  const u = state.users.find(x => x.id === id);
+  if (!u) return;
+  const statuses = ['Active', 'Pending', 'Suspended'];
+  const next = statuses[(statuses.indexOf(u.status) + 1) % statuses.length];
+  u.status = next;
+  renderUsers();
+  addAuditEntry(`User <strong>${u.name}</strong> status changed to ${next}.`);
+}
+
+// ── AUDIT ──
+function addAuditEntry(msg) {
+  const now = new Date();
+  const ts = now.toISOString().replace('T',' ').slice(0,19) + ' UTC';
+  const body = document.getElementById('audit-log-body');
+  const entry = document.createElement('div');
+  entry.className = 'audit-entry';
+  entry.innerHTML = `
+    <div class="audit-dot" style="background:var(--primary)"></div>
+    <div>
+      <div class="audit-time">${ts}</div>
+      <div class="audit-msg">${msg}</div>
+    </div>
+  `;
+  body.insertBefore(entry, body.firstChild);
+}
+
+// ── VESSELS ──
+function vesselStatusBadge(status) {
+  const map = {
+    Registered:    'badge-green',
+    Blacklisted:   'badge-red',
+    'Under Review':'badge-orange',
+  };
+  const cls = map[status] || 'badge-grey';
+  return `<span class="status-badge ${cls}"><span class="dot"></span>${status.toUpperCase()}</span>`;
+}
+
+function renderVessels() {
+  const search  = (document.querySelector('#screen-vessels .toolbar-search') || {value:''}).value.toLowerCase();
+  const typeF   = document.getElementById('type-filter').value;
+  const flagF   = document.getElementById('flag-filter').value;
+  const statusF = document.getElementById('vstatus-filter').value;
+
+  const filtered = state.vessels.filter(v => {
+    const matchSearch = !search ||
+      v.imo.toLowerCase().includes(search) ||
+      v.name.toLowerCase().includes(search) ||
+      v.owner.toLowerCase().includes(search);
+    const matchType   = !typeF   || v.type   === typeF;
+    const matchFlag   = !flagF   || v.flag   === flagF;
+    const matchStatus = !statusF || v.status === statusF;
+    return matchSearch && matchType && matchFlag && matchStatus;
+  });
+
+  const tbody = document.getElementById('vessels-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="table-empty">${state.vessels.length === 0 ? 'No vessels registered. Add a vessel to the database.' : 'No vessels match the current filters.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(v => `
+    <tr class="clickable" onclick="openVesselPanel('${v.imo}')">
+      <td class="mono">${v.imo}</td>
+      <td style="font-weight:600;">${v.name}</td>
+      <td style="color:var(--t2);font-size:12px;">${v.type}</td>
+      <td style="font-size:12px;">${v.flag}</td>
+      <td class="mono">${v.loa}</td>
+      <td class="mono">${v.draught}</td>
+      <td class="mono">${Number(v.gt).toLocaleString()}</td>
+      <td style="color:var(--t2);font-size:12px;">${v.owner}</td>
+      <td>${vesselStatusBadge(v.status)}</td>
+    </tr>
+  `).join('');
+}
+
+function filterVessels(val) { renderVessels(); }
+
+function addVessel() {
+  const imo     = document.getElementById('v-imo').value.trim();
+  const name    = document.getElementById('v-name').value.trim();
+  const type    = document.getElementById('v-type').value;
+  const flag    = document.getElementById('v-flag').value;
+  const loa     = document.getElementById('v-loa').value;
+  const draught = document.getElementById('v-draught').value;
+  const gt      = document.getElementById('v-gt').value;
+  const owner   = document.getElementById('v-owner').value.trim();
+  const status  = document.getElementById('v-status').value;
+
+  if (!imo || !name || !type || !flag) {
+    alert('Please fill in all required fields (IMO, Name, Type, Flag).');
+    return;
+  }
+
+  state.vessels.push({ imo, name, type, flag, loa: loa||'—', draught: draught||'—', gt: gt||0, owner: owner||'—', status });
+  closeModal('vessel-modal');
+  ['v-imo','v-name','v-loa','v-draught','v-gt','v-owner'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('v-type').value = '';
+  document.getElementById('v-flag').value = '';
+  document.getElementById('v-status').value = 'Registered';
+  renderVessels();
+  updateKPI();
+  addAuditEntry(`Vessel <strong>${name}</strong> (${imo}) registered in the database.`);
+}
+
+// ── VESSEL SIDE PANEL ──
+function openVesselPanel(imo) {
+  const v = state.vessels.find(x => x.imo === imo);
+  if (!v) return;
+
+  document.getElementById('vp-title').textContent = v.name;
+  document.getElementById('vp-body').innerHTML = `
+    <div class="sp-section">
+      <div class="sp-section-title">Identification</div>
+      <div class="sp-field"><span class="sp-key">IMO Number</span><span class="sp-val">${v.imo}</span></div>
+      <div class="sp-field"><span class="sp-key">Vessel Name</span><span class="sp-val">${v.name}</span></div>
+      <div class="sp-field"><span class="sp-key">Type</span><span class="sp-val">${v.type}</span></div>
+      <div class="sp-field"><span class="sp-key">Flag State</span><span class="sp-val">${v.flag}</span></div>
+      <div class="sp-field"><span class="sp-key">Status</span><span class="sp-val">${vesselStatusBadge(v.status)}</span></div>
+    </div>
+    <div class="sp-section">
+      <div class="sp-section-title">Technical Particulars</div>
+      <div class="sp-field"><span class="sp-key">LOA</span><span class="sp-val">${v.loa} m</span></div>
+      <div class="sp-field"><span class="sp-key">Draught</span><span class="sp-val">${v.draught} m</span></div>
+      <div class="sp-field"><span class="sp-key">Gross Tonnage</span><span class="sp-val">${Number(v.gt).toLocaleString()} GT</span></div>
+    </div>
+    <div class="sp-section">
+      <div class="sp-section-title">Ownership</div>
+      <div class="sp-field"><span class="sp-key">Registered Owner</span><span class="sp-val">${v.owner}</span></div>
+    </div>
+    <div style="margin-top:20px;">
+      <button class="btn-secondary" style="width:100%;margin-bottom:10px;padding:10px;" onclick="if(confirm('Remove this vessel?')){removeVesselFromPanel('${v.imo}')}">Remove from Registry</button>
+    </div>
+  `;
+
+  document.getElementById('vessel-panel').classList.add('open');
+}
+
+function removeVesselFromPanel(imo) {
+  const v = state.vessels.find(x => x.imo === imo);
+  state.vessels = state.vessels.filter(x => x.imo !== imo);
+  closeSidePanel();
+  renderVessels();
+  updateKPI();
+  if (v) addAuditEntry(`Vessel <strong>${v.name}</strong> (${imo}) removed from registry.`);
+}
+
+function closeSidePanel() {
+  document.getElementById('vessel-panel').classList.remove('open');
+}
+
+// ── KPI UPDATE ──
+function updateKPI() {
+  const kpiCards = document.querySelectorAll('.kpi-value');
+  // vessels in DB
+  if (kpiCards[1]) kpiCards[1].textContent = state.vessels.length;
+}
+
+// ── ESC KEY ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    closeSidePanel();
+  }
+});
+</script>
+</body>
+</html>
