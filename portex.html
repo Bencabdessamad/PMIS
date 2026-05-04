@@ -26,6 +26,7 @@
   --purple: #A855F7;
   --blue: #3B82F6;
   --teal: #00B896;
+  --btn-text: #080C10;
 }
 
 :root[data-theme="light"] {
@@ -45,6 +46,7 @@
   --purple: #9333EA;
   --blue: #2563EB;
   --teal: #009B7E;
+  --btn-text: #FFFFFF;
 }
 
 html { transition: background 0.2s, color 0.2s; }
@@ -79,7 +81,7 @@ html, body { height: 100%; background: var(--bg); color: var(--t1); font-family:
 .form-input::placeholder { color: var(--t2); opacity: 0.6; }
 
 .btn-primary {
-  width: 100%; background: var(--primary); color: #080C10;
+  width: 100%; background: var(--primary); color: var(--btn-text);
   border: none; border-radius: 3px; padding: 12px; font-size: 14px;
   font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer;
   transition: opacity 0.15s; letter-spacing: 0.02em;
@@ -135,7 +137,7 @@ html, body { height: 100%; background: var(--bg); color: var(--t1); font-family:
 .topbar-avatar {
   width: 32px; height: 32px; border-radius: 3px; background: var(--primary);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #080C10;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--btn-text);
 }
 .topbar-name { font-size: 13px; font-weight: 500; color: var(--t1); }
 .topbar-role { font-size: 11px; color: var(--t2); font-family: 'JetBrains Mono', monospace; }
@@ -151,6 +153,7 @@ html, body { height: 100%; background: var(--bg); color: var(--t1); font-family:
   transition: color 0.15s, border-color 0.15s, background 0.15s; line-height: 1;
 }
 .theme-btn:hover { border-color: var(--primary); color: var(--primary); }
+.auth-theme-btn { position: fixed; top: 16px; right: 16px; z-index: 10; }
 
 /* Body */
 #body { display: flex; flex: 1; overflow: hidden; }
@@ -241,7 +244,7 @@ html, body { height: 100%; background: var(--bg); color: var(--t1); font-family:
 }
 .toolbar-select:focus { border-color: var(--primary); }
 .add-btn {
-  background: var(--primary); color: #080C10; border: none; border-radius: 3px;
+  background: var(--primary); color: var(--btn-text); border: none; border-radius: 3px;
   padding: 9px 16px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif;
   cursor: pointer; white-space: nowrap; transition: opacity 0.15s; letter-spacing: 0.02em;
 }
@@ -367,6 +370,9 @@ tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
 
 <!-- ══════════════ AUTH WRAPPER ══════════════ -->
 <div id="auth-wrapper">
+  <button class="theme-btn auth-theme-btn" id="auth-theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">
+    <span id="auth-theme-icon">☀</span>
+  </button>
 
   <!-- LOGIN -->
   <div id="login-screen" class="auth-card">
@@ -1416,13 +1422,13 @@ function updateKPI() {
 // ── THEME ──
 function toggleTheme() {
   const root = document.documentElement;
-  const btn = document.getElementById('theme-icon');
-  if (root.getAttribute('data-theme') === 'light') {
+  const isLight = root.getAttribute('data-theme') === 'light';
+  if (isLight) {
     root.removeAttribute('data-theme');
-    btn.textContent = '☀';
+    document.querySelectorAll('#theme-icon, #auth-theme-icon').forEach(el => el.textContent = '☀');
   } else {
     root.setAttribute('data-theme', 'light');
-    btn.textContent = '☾';
+    document.querySelectorAll('#theme-icon, #auth-theme-icon').forEach(el => el.textContent = '☾');
   }
 }
 
