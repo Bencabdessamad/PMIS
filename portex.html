@@ -768,10 +768,13 @@ tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
             <option value="Malta">Malta</option>
             <option value="Cyprus">Cyprus</option>
             <option value="Singapore">Singapore</option>
+            <option value="Hong Kong">Hong Kong</option>
+            <option value="Denmark">Denmark</option>
           </select>
           <select class="toolbar-select" id="vstatus-filter" onchange="filterVessels()">
             <option value="">All Statuses</option>
             <option value="Registered">Registered</option>
+            <option value="In Port">In Port</option>
             <option value="Blacklisted">Blacklisted</option>
             <option value="Under Review">Under Review</option>
             <option value="Deactivated">Deactivated</option>
@@ -784,7 +787,7 @@ tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
             <thead>
               <tr>
                 <th>IMO No.</th><th>Vessel Name</th><th>Type</th><th>Flag</th>
-                <th>LOA (m)</th><th>Draught (m)</th><th>GT</th><th>Owner</th><th>Status</th>
+                <th>LOA (m)</th><th>Draught (m)</th><th>GT</th><th>Owner</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody id="vessels-tbody">
@@ -1079,6 +1082,7 @@ tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
         <label class="form-label">Status</label>
         <select class="form-input" id="v-status">
           <option value="Registered">Registered</option>
+          <option value="In Port">In Port</option>
           <option value="Under Review">Under Review</option>
           <option value="Blacklisted">Blacklisted</option>
         </select>
@@ -1181,7 +1185,18 @@ tbody tr.clickable:hover { background: rgba(0,212,170,0.04); cursor: pointer; }
 // ── STATE ──
 const state = {
   users: [],
-  vessels: [],
+  vessels: [
+    { imo:"9321483", name:"EMMA MAERSK",             type:"Container",     flag:"Singapore",      loa:"397.71", draught:"13.4", gt:171542,  owner:"A.P. Moller - Maersk",          status:"Registered", beam:"56.55", mmsi:"563254800", callsign:"9VCY3",  dWT:"174239", built:"2006" },
+    { imo:"9395044", name:"VARAMO",                   type:"General Cargo", flag:"Cyprus",         loa:"166.0",  draught:"9.5",  gt:9611,    owner:"Maersk Line",                   status:"Registered", beam:"25.0",  mmsi:"210950000", callsign:"C4SQ2",  dWT:"12450",  built:"2009" },
+    { imo:"9525738", name:"COSCO SHIPPING UNIVERSE",  type:"Container",     flag:"Hong Kong",      loa:"399.99", draught:"16.0", gt:210000,  owner:"COSCO Shipping Lines",          status:"Registered", beam:"58.6",  mmsi:"477211600", callsign:"VRKU8",  dWT:"199900", built:"2018" },
+    { imo:"9706313", name:"MSC GULSUN",               type:"Container",     flag:"Panama",         loa:"399.99", draught:"16.5", gt:232527,  owner:"Mediterranean Shipping Company",status:"Registered", beam:"61.5",  mmsi:"372444000", callsign:"3FPF9",  dWT:"225816", built:"2019" },
+    { imo:"9795544", name:"HMM ALGECIRAS",            type:"Container",     flag:"Marshall Islands",loa:"399.99",draught:"16.5", gt:228283,  owner:"Hyundai Merchant Marine",       status:"Registered", beam:"61.0",  mmsi:"538008788", callsign:"V7ZU5",  dWT:"219130", built:"2020" },
+    { imo:"9839430", name:"EVER ACE",                 type:"Container",     flag:"Panama",         loa:"399.99", draught:"16.0", gt:235000,  owner:"Evergreen Marine Corporation",  status:"Registered", beam:"61.5",  mmsi:"357379000", callsign:"3FHK3",  dWT:"222000", built:"2021" },
+    { imo:"9387425", name:"ATLANTIC NAVIGATOR II",    type:"Bulk Carrier",  flag:"Marshall Islands",loa:"225.0", draught:"14.2", gt:43545,   owner:"Atlantic Bulk Carriers",        status:"Registered", beam:"32.26", mmsi:"538004687", callsign:"V7YN4",  dWT:"82000",  built:"2013" },
+    { imo:"9232515", name:"MSC LUCIA",                type:"Container",     flag:"Panama",         loa:"299.94", draught:"13.5", gt:75590,   owner:"Mediterranean Shipping Company",status:"Registered", beam:"42.8",  mmsi:"355703000", callsign:"3FMQ7",  dWT:"85700",  built:"2002" },
+    { imo:"9301443", name:"COSCO ANTWERP",            type:"Container",     flag:"Hong Kong",      loa:"350.0",  draught:"15.0", gt:115758,  owner:"COSCO Shipping Lines",          status:"In Port",    beam:"45.6",  mmsi:"477569600", callsign:"VRJF4",  dWT:"114000", built:"2007" },
+    { imo:"9301112", name:"MAERSK TANGIER",           type:"Container",     flag:"Denmark",        loa:"367.3",  draught:"15.0", gt:194849,  owner:"A.P. Moller - Maersk",          status:"In Port",    beam:"51.2",  mmsi:"219000345", callsign:"OXMT2",  dWT:"186000", built:"2015" },
+  ],
   userIdCounter: 1000,
   vesselIdCounter: 1,
   currentScreen: 'dashboard',
@@ -1526,6 +1541,7 @@ function addAuditEntry(msg) {
 function vesselStatusBadge(status) {
   const map = {
     Registered:    'badge-green',
+    'In Port':     'badge-teal',
     Blacklisted:   'badge-red',
     'Under Review':'badge-orange',
     Deactivated:   'badge-red',
@@ -1553,7 +1569,7 @@ function renderVessels() {
 
   const tbody = document.getElementById('vessels-tbody');
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="table-empty">${state.vessels.length === 0 ? 'No vessels registered. Add a vessel to the database.' : 'No vessels match the current filters.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="table-empty">${state.vessels.length === 0 ? 'No vessels registered. Add a vessel to the database.' : 'No vessels match the current filters.'}</td></tr>`;
     return;
   }
 
@@ -1568,6 +1584,11 @@ function renderVessels() {
       <td class="mono">${Number(v.gt).toLocaleString()}</td>
       <td style="color:var(--t2);font-size:12px;">${v.owner}</td>
       <td>${vesselStatusBadge(v.status)}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="action-row">
+          <button class="act-btn" onclick="openVesselPanel('${v.imo}')">View</button>
+        </div>
+      </td>
     </tr>
   `).join('');
 }
@@ -1590,7 +1611,7 @@ function addVessel() {
     return;
   }
 
-  state.vessels.push({ imo, name, type, flag, loa: loa||'—', draught: draught||'—', gt: gt||0, owner: owner||'—', status });
+  state.vessels.push({ imo, name, type, flag, loa: loa||'—', draught: draught||'—', gt: gt||0, owner: owner||'—', status, beam:'—', mmsi:'—', callsign:'—', dWT:'—', built:'—' });
   closeModal('vessel-modal');
   ['v-imo','v-name','v-loa','v-draught','v-gt','v-owner'].forEach(f => document.getElementById(f).value = '');
   document.getElementById('v-type').value = '';
@@ -1611,16 +1632,21 @@ function openVesselPanel(imo) {
     <div class="sp-section">
       <div class="sp-section-title">Identification</div>
       <div class="sp-field"><span class="sp-key">IMO Number</span><span class="sp-val">${v.imo}</span></div>
+      <div class="sp-field"><span class="sp-key">MMSI</span><span class="sp-val">${v.mmsi || '—'}</span></div>
+      <div class="sp-field"><span class="sp-key">Call Sign</span><span class="sp-val">${v.callsign || '—'}</span></div>
       <div class="sp-field"><span class="sp-key">Vessel Name</span><span class="sp-val">${v.name}</span></div>
       <div class="sp-field"><span class="sp-key">Type</span><span class="sp-val">${v.type}</span></div>
       <div class="sp-field"><span class="sp-key">Flag State</span><span class="sp-val">${v.flag}</span></div>
+      <div class="sp-field"><span class="sp-key">Year Built</span><span class="sp-val">${v.built || '—'}</span></div>
       <div class="sp-field"><span class="sp-key">Status</span><span class="sp-val">${vesselStatusBadge(v.status)}</span></div>
     </div>
     <div class="sp-section">
       <div class="sp-section-title">Technical Particulars</div>
       <div class="sp-field"><span class="sp-key">LOA</span><span class="sp-val">${v.loa} m</span></div>
+      <div class="sp-field"><span class="sp-key">Beam</span><span class="sp-val">${v.beam ? v.beam+' m' : '—'}</span></div>
       <div class="sp-field"><span class="sp-key">Draught</span><span class="sp-val">${v.draught} m</span></div>
       <div class="sp-field"><span class="sp-key">Gross Tonnage</span><span class="sp-val">${Number(v.gt).toLocaleString()} GT</span></div>
+      <div class="sp-field"><span class="sp-key">Deadweight</span><span class="sp-val">${v.dWT ? Number(v.dWT).toLocaleString()+' DWT' : '—'}</span></div>
     </div>
     <div class="sp-section">
       <div class="sp-section-title">Ownership</div>
@@ -1662,10 +1688,17 @@ function closeSidePanel() {
 
 // ── KPI UPDATE ──
 function updateKPI() {
-  const kpiCards = document.querySelectorAll('.kpi-value');
-  // vessels in DB
-  if (kpiCards[1]) kpiCards[1].textContent = state.vessels.length;
+  const cards = document.querySelectorAll('.kpi-value');
+  const inPort = state.vessels.filter(v => v.status === 'In Port').length;
+  if (cards[0]) cards[0].textContent = inPort;
+  if (cards[1]) cards[1].textContent = state.vessels.length;
+  if (cards[2]) cards[2].textContent = 1;
+  if (cards[3]) cards[3].textContent = state.users.filter(u => u.status === 'Pending').length;
 }
+
+// ── INIT ──
+updateKPI();
+renderVessels();
 
 // ── PP-14: SESSION TIMEOUT ──
 let sessionWarningTimer = null;
