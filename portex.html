@@ -1284,6 +1284,7 @@ function goToMFA() {
 
 function goToDashboard() {
   clearInterval(countdownInterval);
+  closeSidePanel();
   document.getElementById('auth-wrapper').style.display = 'none';
   const app = document.getElementById('app');
   app.classList.add('visible');
@@ -1293,6 +1294,8 @@ function goToDashboard() {
 
 function logout() {
   clearSessionTimer();
+  closeSidePanel();
+  document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   document.getElementById('session-toast').classList.remove('visible');
   document.getElementById('app').classList.remove('visible');
   document.getElementById('auth-wrapper').style.display = 'flex';
